@@ -6,11 +6,17 @@
 package org.burgetr.webvector;
 
 import java.io.FileOutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import org.fit.cssbox.demo.ImageRenderer;
+
+import javax.swing.ButtonGroup;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagLayout;
 import javax.swing.JLabel;
@@ -20,6 +26,8 @@ import java.awt.Font;
 import java.awt.Insets;
 import javax.swing.JButton;
 import javax.swing.JRadioButton;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  * This is a wrapper class for calling the CSSBox ImageRenderer demo. 
@@ -43,6 +51,84 @@ public class WebVector
     private JRadioButton svgRadio = null;
     private JLabel typeLabel = null;
     private JRadioButton pngRadio = null;
+    private JPanel buttonPanel = null;
+    private JButton closeButton = null;
+    
+    
+    public WebVector()
+    {
+        mainFrame = getMainFrame();
+        validateForm();
+        mainFrame.setVisible(true);
+    }
+
+    private void validateForm()
+    {
+        boolean valid = true;
+        
+        String urls = urlText.getText();
+        if (urls.isEmpty() || urls.equals("http://"))
+        {
+            valid = false;
+            statusText.setText("Enter source URL");
+        }
+        
+        if (valid)
+        {
+            try {
+                URL url = new URL(urlText.getText());
+                if (url == null)
+                {
+                    valid = false;
+                    statusText.setText("Invalid URL");
+                }
+            } catch (MalformedURLException e) {
+                valid = false;
+                statusText.setText("Invalid URL");
+            }
+        }
+        
+        if (valid)
+        {
+            if (destText.getText().isEmpty())
+            {
+                valid = false;
+                statusText.setText("Choose a destination file");
+            }
+        }
+        
+        if (valid)
+            statusText.setText("Waiting for start");
+        
+        statusText.setForeground(valid ? Color.BLACK : Color.RED);
+        startButton.setEnabled(valid);
+    }
+    
+    private void execTransformation()
+    {
+        try {
+            startButton.setEnabled(false);
+            statusText.setText("Operation in progress...");
+            short type = ImageRenderer.TYPE_SVG;
+            if (pngRadio.isSelected())
+                type = ImageRenderer.TYPE_PNG;
+            
+            FileOutputStream os = new FileOutputStream(destText.getText());
+            
+            ImageRenderer r = new ImageRenderer();
+            r.renderURL(urlText.getText(), os, type);
+            
+            os.close();
+            startButton.setEnabled(true);
+            statusText.setText("Done");
+            JOptionPane.showMessageDialog(mainFrame, "Rendering succeeded.", "Finished", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception e) {
+            startButton.setEnabled(true);
+            statusText.setText("Error");
+            JOptionPane.showMessageDialog(mainFrame, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
     /**
      * This method initializes mainFrame	
      * 	
@@ -69,6 +155,11 @@ public class WebVector
     {
         if (mainPanel == null)
         {
+            GridBagConstraints gridBagConstraints11 = new GridBagConstraints();
+            gridBagConstraints11.gridx = 0;
+            gridBagConstraints11.fill = GridBagConstraints.HORIZONTAL;
+            gridBagConstraints11.gridwidth = 2;
+            gridBagConstraints11.gridy = 8;
             GridBagConstraints gridBagConstraints8 = new GridBagConstraints();
             gridBagConstraints8.gridx = 0;
             gridBagConstraints8.anchor = GridBagConstraints.WEST;
@@ -87,10 +178,6 @@ public class WebVector
             GridBagConstraints gridBagConstraints5 = new GridBagConstraints();
             gridBagConstraints5.gridx = 1;
             gridBagConstraints5.gridy = 1;
-            GridBagConstraints gridBagConstraints4 = new GridBagConstraints();
-            gridBagConstraints4.gridx = 0;
-            gridBagConstraints4.gridwidth = 2;
-            gridBagConstraints4.gridy = 7;
             GridBagConstraints gridBagConstraints3 = new GridBagConstraints();
             gridBagConstraints3.fill = GridBagConstraints.BOTH;
             gridBagConstraints3.gridy = 6;
@@ -126,11 +213,11 @@ public class WebVector
             mainPanel.add(destLabel, gridBagConstraints1);
             mainPanel.add(getDestText(), gridBagConstraints2);
             mainPanel.add(getStatusText(), gridBagConstraints3);
-            mainPanel.add(getStartButton(), gridBagConstraints4);
             mainPanel.add(getBrowseUrlButton(), gridBagConstraints5);
             mainPanel.add(getBrowseDestButton(), gridBagConstraints6);
             mainPanel.add(getTypePanel(), gridBagConstraints7);
             mainPanel.add(typeLabel, gridBagConstraints8);
+            mainPanel.add(getButtonPanel(), gridBagConstraints11);
         }
         return mainPanel;
     }
@@ -146,6 +233,14 @@ public class WebVector
         {
             urlText = new JTextField();
             urlText.setText("http://");
+            urlText.setCaretPosition(urlText.getText().length());
+            urlText.addCaretListener(new javax.swing.event.CaretListener()
+            {
+                public void caretUpdate(javax.swing.event.CaretEvent e)
+                {
+                    validateForm();
+                }
+            });
         }
         return urlText;
     }
@@ -160,7 +255,15 @@ public class WebVector
         if (destText == null)
         {
             destText = new JTextField();
-            destText.setText("output.svg");
+            String s = System.getProperty("user.home") + System.getProperty("file.separator");
+            destText.setText(s + "output.svg");
+            destText.addCaretListener(new javax.swing.event.CaretListener()
+            {
+                public void caretUpdate(javax.swing.event.CaretEvent e)
+                {
+                    validateForm();
+                }
+            });
         }
         return destText;
     }
@@ -193,6 +296,14 @@ public class WebVector
         {
             startButton = new JButton();
             startButton.setText("Start");
+            startButton.setEnabled(false);
+            startButton.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent e)
+                {
+                    execTransformation();
+                }
+            });
         }
         return startButton;
     }
@@ -209,6 +320,25 @@ public class WebVector
             browseUrlButton = new JButton();
             browseUrlButton.setText("Browse...");
             browseUrlButton.setToolTipText("Browse for local files");
+            browseUrlButton.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent e)
+                {
+                    JFileChooser chooser = new JFileChooser();
+                    chooser.setDialogTitle("Source file");
+                    chooser.setAcceptAllFileFilterUsed(true);
+                    FileFilter fhtml = new FileNameExtensionFilter("(X)HTML Files", "html");
+                    chooser.addChoosableFileFilter(fhtml);
+                    chooser.setFileFilter(fhtml);
+                    int returnVal = chooser.showOpenDialog(mainFrame);
+                    if(returnVal == JFileChooser.APPROVE_OPTION)
+                    {
+                        String path = chooser.getSelectedFile().getAbsolutePath();
+                        urlText.setText("file://" + path);
+                    }               
+                    
+                }
+            });
         }
         return browseUrlButton;
     }
@@ -224,6 +354,28 @@ public class WebVector
         {
             browseDestButton = new JButton();
             browseDestButton.setText("Browse...");
+            browseDestButton.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent e)
+                {
+                    JFileChooser chooser = new JFileChooser();
+                    chooser.setDialogTitle("Destination file");
+                    chooser.setAcceptAllFileFilterUsed(false);
+                    FileFilter fall = new FileNameExtensionFilter("All supported images", "svg", "png");
+                    FileFilter fsvg = new FileNameExtensionFilter("SVG vector images", "svg");
+                    FileFilter fpng = new FileNameExtensionFilter("PNG bitmap images", "png");
+                    chooser.addChoosableFileFilter(fall);
+                    chooser.addChoosableFileFilter(fsvg);
+                    chooser.addChoosableFileFilter(fpng);
+                    chooser.setFileFilter(svgRadio.isSelected() ? fsvg : fpng);
+                    int returnVal = chooser.showSaveDialog(mainFrame);
+                    if(returnVal == JFileChooser.APPROVE_OPTION)
+                    {
+                        String path = chooser.getSelectedFile().getAbsolutePath();
+                        destText.setText(path);
+                    }               
+                }
+            });
         }
         return browseDestButton;
     }
@@ -243,6 +395,9 @@ public class WebVector
             gridBagConstraints9.gridy = 0;
             typePanel = new JPanel();
             typePanel.setLayout(new GridBagLayout());
+            ButtonGroup bgroup = new ButtonGroup();
+            bgroup.add(getSvgRadio());
+            bgroup.add(getPngRadio());
             typePanel.add(getSvgRadio(), new GridBagConstraints());
             typePanel.add(getPngRadio(), gridBagConstraints9);
         }
@@ -260,6 +415,24 @@ public class WebVector
         {
             svgRadio = new JRadioButton();
             svgRadio.setText("SVG Vector Graphics");
+            svgRadio.setSelected(true);
+            svgRadio.addItemListener(new java.awt.event.ItemListener()
+            {
+                public void itemStateChanged(java.awt.event.ItemEvent e)
+                {
+                    String text = destText.getText();
+                    if (svgRadio.isSelected() && text.endsWith(".png"))
+                    {
+                        text = text.substring(0, text.length()-4) + ".svg";
+                        destText.setText(text);
+                    }
+                    if (!svgRadio.isSelected() && text.endsWith(".svg"))
+                    {
+                        text = text.substring(0, text.length()-4) + ".png";
+                        destText.setText(text);
+                    }
+                }
+            });
         }
         return svgRadio;
     }
@@ -279,9 +452,62 @@ public class WebVector
         return pngRadio;
     }
 
+    /**
+     * This method initializes buttonPanel	
+     * 	
+     * @return javax.swing.JPanel	
+     */
+    private JPanel getButtonPanel()
+    {
+        if (buttonPanel == null)
+        {
+            GridBagConstraints gridBagConstraints4 = new GridBagConstraints();
+            gridBagConstraints4.gridwidth = 2;
+            gridBagConstraints4.gridy = -1;
+            gridBagConstraints4.gridx = -1;
+            GridBagConstraints gridBagConstraints10 = new GridBagConstraints();
+            gridBagConstraints10.gridx = 2;
+            gridBagConstraints10.insets = new Insets(0, 30, 0, 0);
+            gridBagConstraints10.gridy = 0;
+            buttonPanel = new JPanel();
+            buttonPanel.setLayout(new GridBagLayout());
+            buttonPanel.add(getStartButton(), gridBagConstraints4);
+            buttonPanel.add(getCloseButton(), gridBagConstraints10);
+        }
+        return buttonPanel;
+    }
+
+    /**
+     * This method initializes closeButton	
+     * 	
+     * @return javax.swing.JButton	
+     */
+    private JButton getCloseButton()
+    {
+        if (closeButton == null)
+        {
+            closeButton = new JButton();
+            closeButton.setText("Close");
+            closeButton.setFont(new Font("Dialog", Font.PLAIN, 12));
+            closeButton.addActionListener(new java.awt.event.ActionListener()
+            {
+                public void actionPerformed(java.awt.event.ActionEvent e)
+                {
+                    mainFrame.setVisible(false);
+                    System.exit(0);
+                }
+            });
+        }
+        return closeButton;
+    }
+
     public static void main(String[] args)
     {
-        if (args.length != 3)
+        if (args.length == 0)
+        {
+            new WebVector();
+        }
+        else if (args.length != 3)
         {
             System.err.println("Usage: java -jar WebVector.jar <url> <output_file> <format>");
             System.err.println();
@@ -299,30 +525,31 @@ public class WebVector
             System.err.println("WebVector is based on the CSSBox rendering engine. See http://cssbox.sourceforge.net/");
             System.exit(0);
         }
-        
-        try {
-            short type = -1;
-            if (args[2].equalsIgnoreCase("png"))
-                type = ImageRenderer.TYPE_PNG;
-            else if (args[2].equalsIgnoreCase("svg"))
-                type = ImageRenderer.TYPE_SVG;
-            else
-            {
-                System.err.println("Error: unknown format");
-                System.exit(0);
+        else
+        {
+            try {
+                short type = -1;
+                if (args[2].equalsIgnoreCase("png"))
+                    type = ImageRenderer.TYPE_PNG;
+                else if (args[2].equalsIgnoreCase("svg"))
+                    type = ImageRenderer.TYPE_SVG;
+                else
+                {
+                    System.err.println("Error: unknown format");
+                    System.exit(0);
+                }
+                
+                FileOutputStream os = new FileOutputStream(args[1]);
+                
+                ImageRenderer r = new ImageRenderer();
+                r.renderURL(args[0], os, type);
+                
+                os.close();
+                System.err.println("Done.");
+            } catch (Exception e) {
+                System.err.println("Error: " + e.getMessage());
             }
-            
-            FileOutputStream os = new FileOutputStream(args[1]);
-            
-            ImageRenderer r = new ImageRenderer();
-            r.renderURL(args[0], os, type);
-            
-            os.close();
-            System.err.println("Done.");
-        } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
         }
-        
     }
     
 }
