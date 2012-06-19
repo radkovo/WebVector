@@ -28,6 +28,9 @@ import javax.swing.JButton;
 import javax.swing.JRadioButton;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.SwingConstants;
+import javax.swing.JCheckBox;
+import java.awt.GridLayout;
 
 /**
  * This is a wrapper class for calling the CSSBox ImageRenderer demo. 
@@ -53,8 +56,14 @@ public class WebVector
     private JRadioButton pngRadio = null;
     private JPanel buttonPanel = null;
     private JButton closeButton = null;
+    private JPanel settingsPanel;
+    private JCheckBox chkLoadImages;
+    private JCheckBox chkLoadBackgroundImages;
     
     
+    /**
+     * @wbp.parser.entryPoint
+     */
     public WebVector()
     {
         mainFrame = getMainFrame();
@@ -76,12 +85,7 @@ public class WebVector
         if (valid)
         {
             try {
-                URL url = new URL(urlText.getText());
-                if (url == null)
-                {
-                    valid = false;
-                    statusText.setText("Invalid URL");
-                }
+                new URL(urlText.getText());
             } catch (MalformedURLException e) {
                 valid = false;
                 statusText.setText("Invalid URL");
@@ -116,6 +120,7 @@ public class WebVector
             FileOutputStream os = new FileOutputStream(destText.getText());
             
             ImageRenderer r = new ImageRenderer();
+            r.setLoadImages(chkLoadImages.isSelected(), chkLoadBackgroundImages.isSelected());
             r.renderURL(urlText.getText(), os, type);
             
             os.close();
@@ -139,7 +144,7 @@ public class WebVector
         if (mainFrame == null)
         {
             mainFrame = new JFrame();
-            mainFrame.setSize(new Dimension(509, 270));
+            mainFrame.setSize(new Dimension(509, 310));
             mainFrame.setTitle("WebVector");
             mainFrame.setContentPane(getMainPanel());
         }
@@ -156,62 +161,80 @@ public class WebVector
         if (mainPanel == null)
         {
             GridBagConstraints gridBagConstraints11 = new GridBagConstraints();
+            gridBagConstraints11.insets = new Insets(0, 0, 10, 0);
             gridBagConstraints11.gridx = 0;
             gridBagConstraints11.fill = GridBagConstraints.HORIZONTAL;
             gridBagConstraints11.gridwidth = 2;
-            gridBagConstraints11.gridy = 8;
+            gridBagConstraints11.gridy = 10;
             GridBagConstraints gridBagConstraints8 = new GridBagConstraints();
             gridBagConstraints8.gridx = 0;
             gridBagConstraints8.anchor = GridBagConstraints.WEST;
-            gridBagConstraints8.insets = new Insets(10, 0, 0, 0);
+            gridBagConstraints8.insets = new Insets(10, 0, 5, 5);
             gridBagConstraints8.gridy = 4;
             typeLabel = new JLabel();
             typeLabel.setText("Output type");
             GridBagConstraints gridBagConstraints7 = new GridBagConstraints();
+            gridBagConstraints7.insets = new Insets(0, 0, 5, 0);
             gridBagConstraints7.gridx = 0;
             gridBagConstraints7.gridwidth = 2;
             gridBagConstraints7.fill = GridBagConstraints.BOTH;
             gridBagConstraints7.gridy = 5;
             GridBagConstraints gridBagConstraints6 = new GridBagConstraints();
+            gridBagConstraints6.insets = new Insets(0, 0, 5, 0);
             gridBagConstraints6.gridx = 1;
             gridBagConstraints6.gridy = 3;
             GridBagConstraints gridBagConstraints5 = new GridBagConstraints();
+            gridBagConstraints5.insets = new Insets(0, 0, 5, 0);
             gridBagConstraints5.gridx = 1;
             gridBagConstraints5.gridy = 1;
             GridBagConstraints gridBagConstraints3 = new GridBagConstraints();
             gridBagConstraints3.fill = GridBagConstraints.BOTH;
-            gridBagConstraints3.gridy = 6;
+            gridBagConstraints3.gridy = 8;
             gridBagConstraints3.weightx = 1.0;
             gridBagConstraints3.insets = new Insets(10, 0, 10, 0);
             gridBagConstraints3.gridwidth = 2;
             gridBagConstraints3.gridx = 0;
             GridBagConstraints gridBagConstraints2 = new GridBagConstraints();
+            gridBagConstraints2.insets = new Insets(0, 0, 5, 5);
             gridBagConstraints2.fill = GridBagConstraints.BOTH;
             gridBagConstraints2.gridy = 3;
             gridBagConstraints2.weightx = 1.0;
             gridBagConstraints2.gridx = 0;
             GridBagConstraints gridBagConstraints0 = new GridBagConstraints();
+            gridBagConstraints0.insets = new Insets(0, 0, 5, 5);
+            gridBagConstraints0.gridx = 0;
+            gridBagConstraints0.gridy = 0;
             gridBagConstraints0.anchor = GridBagConstraints.WEST;
             urlLabel = new JLabel();
             urlLabel.setText("Source URL");
             GridBagConstraints gridBagConstraints1 = new GridBagConstraints();
             gridBagConstraints1.gridx = 0;
             gridBagConstraints1.anchor = GridBagConstraints.WEST;
-            gridBagConstraints1.insets = new Insets(10, 0, 0, 0);
+            gridBagConstraints1.insets = new Insets(10, 0, 5, 5);
             gridBagConstraints1.gridy = 2;
             destLabel = new JLabel();
             destLabel.setText("Destination file");
             GridBagConstraints gridBagConstraints = new GridBagConstraints();
+            gridBagConstraints.insets = new Insets(0, 0, 5, 5);
             gridBagConstraints.fill = GridBagConstraints.BOTH;
             gridBagConstraints.gridy = 1;
             gridBagConstraints.weightx = 1.0;
             gridBagConstraints.gridx = 0;
             mainPanel = new JPanel();
-            mainPanel.setLayout(new GridBagLayout());
+            GridBagLayout gbl_mainPanel = new GridBagLayout();
+            gbl_mainPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0};
+            gbl_mainPanel.columnWeights = new double[]{1.0, 0.0};
+            mainPanel.setLayout(gbl_mainPanel);
             mainPanel.add(urlLabel, gridBagConstraints0);
             mainPanel.add(getUrlText(), gridBagConstraints);
             mainPanel.add(destLabel, gridBagConstraints1);
             mainPanel.add(getDestText(), gridBagConstraints2);
+            GridBagConstraints gbc_settingsPanel = new GridBagConstraints();
+            gbc_settingsPanel.gridheight = 2;
+            gbc_settingsPanel.gridwidth = 2;
+            gbc_settingsPanel.gridx = 0;
+            gbc_settingsPanel.gridy = 6;
+            mainPanel.add(getSettingsPanel(), gbc_settingsPanel);
             mainPanel.add(getStatusText(), gridBagConstraints3);
             mainPanel.add(getBrowseUrlButton(), gridBagConstraints5);
             mainPanel.add(getBrowseDestButton(), gridBagConstraints6);
@@ -499,6 +522,39 @@ public class WebVector
             });
         }
         return closeButton;
+    }
+
+    private JPanel getSettingsPanel()
+    {
+        if (settingsPanel == null)
+        {
+            settingsPanel = new JPanel();
+            settingsPanel.setLayout(new GridLayout(1, 1, 0, 0));
+            settingsPanel.add(getChkLoadImages());
+            settingsPanel.add(getChkLoadBackgroundImages());
+        }
+        return settingsPanel;
+    }
+
+    private JCheckBox getChkLoadImages()
+    {
+        if (chkLoadImages == null)
+        {
+            chkLoadImages = new JCheckBox("Include content images");
+            chkLoadImages.setSelected(true);
+        }
+        return chkLoadImages;
+    }
+
+    private JCheckBox getChkLoadBackgroundImages()
+    {
+        if (chkLoadBackgroundImages == null)
+        {
+            chkLoadBackgroundImages = new JCheckBox(
+                    "Include background images");
+            chkLoadBackgroundImages.setSelected(true);
+        }
+        return chkLoadBackgroundImages;
     }
 
     public static void main(String[] args)
