@@ -8,6 +8,7 @@ package org.burgetr.webvector;
 import java.io.FileOutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.CancellationException;
 
 import org.fit.cssbox.demo.ImageRenderer;
 
@@ -16,20 +17,29 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker.StateValue;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagLayout;
+
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+
 import java.awt.GridBagConstraints;
 import java.awt.Font;
 import java.awt.Insets;
+
 import javax.swing.JButton;
 import javax.swing.JRadioButton;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.JCheckBox;
+
 import java.awt.GridLayout;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 /**
  * This is a wrapper class for calling the CSSBox ImageRenderer demo. 
@@ -38,6 +48,7 @@ import java.awt.GridLayout;
  */
 public class WebVector
 {
+    private TransformWorker worker = null;
 
     private JFrame mainFrame = null;  //  @jve:decl-index=0:visual-constraint="415,61"
     private JPanel mainPanel = null;
@@ -110,22 +121,46 @@ public class WebVector
     private void execTransformation()
     {
         try {
-            startButton.setEnabled(false);
-            statusText.setText("Operation in progress...");
             short type = ImageRenderer.TYPE_SVG;
             if (pngRadio.isSelected())
                 type = ImageRenderer.TYPE_PNG;
             
-            FileOutputStream os = new FileOutputStream(destText.getText());
+            worker = new TransformWorker(urlText.getText(), destText.getText(),
+                    type, chkLoadImages.isSelected(), chkLoadBackgroundImages.isSelected());
+
+            worker.addPropertyChangeListener(new PropertyChangeListener()
+            {
+                @Override
+                public void propertyChange(final PropertyChangeEvent event)
+                {
+                    if (event.getPropertyName().equals("state"))
+                    {
+                        switch ((StateValue) event.getNewValue())
+                        {
+                            case DONE:
+                                try {
+                                    worker.get();
+                                    JOptionPane.showMessageDialog(mainFrame, "Rendering succeeded.", "Finished", JOptionPane.INFORMATION_MESSAGE);
+                                } catch (final CancellationException e) {
+                                      
+                                } catch (final Exception e) {
+                                    JOptionPane.showMessageDialog(mainFrame, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                                }
+                                startButton.setEnabled(true);
+                                statusText.setText("Done");
+                                break;
+                            case STARTED:
+                            case PENDING:
+                                startButton.setEnabled(false);
+                                statusText.setText("Operation in progress...");
+                                break;
+                        }
+                    }
+                }
+            });            
             
-            ImageRenderer r = new ImageRenderer();
-            r.setLoadImages(chkLoadImages.isSelected(), chkLoadBackgroundImages.isSelected());
-            r.renderURL(urlText.getText(), os, type);
+            worker.execute();
             
-            os.close();
-            startButton.setEnabled(true);
-            statusText.setText("Done");
-            JOptionPane.showMessageDialog(mainFrame, "Rendering succeeded.", "Finished", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception e) {
             startButton.setEnabled(true);
             statusText.setText("Error");
@@ -560,7 +595,13 @@ public class WebVector
     {
         if (args.length == 0)
         {
-            new WebVector();
+            SwingUtilities.invokeLater(new Runnable()
+            {
+                public void run() 
+                {
+                    new WebVector();
+                }
+            });
         }
         else if (args.length != 3)
         {
