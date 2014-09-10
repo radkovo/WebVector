@@ -35,36 +35,27 @@ public class TransformWorker extends SwingWorker<Integer, String>
     private String srcUrl;
     private String destFile;
     private ImageRenderer.Type type;
-    private Dimension windowSize;
-    private boolean cropWindow;
-    private boolean loadImages;
-    private boolean loadBgImages;
+    private ImageRenderer renderer;
     
-    
-    public TransformWorker(String srcUrl, String destFile, ImageRenderer.Type type,
+    public TransformWorker(String srcUrl, String destFile, ImageRenderer.Type type, String media,
             Dimension windowSize, boolean cropWindow, boolean loadImages, boolean loadBgImages)
     {
         this.srcUrl = srcUrl;
         this.destFile = destFile;
         this.type = type;
-        this.windowSize = new Dimension(windowSize);
-        this.cropWindow = cropWindow;
-        this.loadImages = loadImages;
-        this.loadBgImages = loadBgImages;
+        
+        renderer = new ImageRenderer();
+        renderer.setMediaType(media);
+        renderer.setWindowSize(windowSize, cropWindow);
+        renderer.setLoadImages(loadImages, loadBgImages);
     }
 
     @Override
     protected Integer doInBackground() throws Exception
     {
         FileOutputStream os = new FileOutputStream(destFile);
-        
-        ImageRenderer r = new ImageRenderer();
-        r.setWindowSize(windowSize, cropWindow);
-        r.setLoadImages(loadImages, loadBgImages);
-        r.renderURL(srcUrl, os, type);
-        
+        renderer.renderURL(srcUrl, os, type);
         os.close();
-
         return 0;
     }
 

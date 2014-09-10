@@ -9,6 +9,8 @@ import java.io.FileOutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.CancellationException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.fit.cssbox.demo.ImageRenderer;
 
@@ -40,9 +42,14 @@ import javax.swing.JCheckBox;
 import java.awt.GridLayout;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
+
 import java.awt.FlowLayout;
+
+import javax.swing.JComboBox;
+import javax.swing.DefaultComboBoxModel;
 
 /**
  * This is a wrapper class for calling the CSSBox ImageRenderer demo. 
@@ -78,6 +85,8 @@ public class WebVector
     private JLabel wxLabel;
     private JSpinner whSpinner;
     private JCheckBox chkCropWindow;
+    private JLabel mediaLabel;
+    private JComboBox<String> mediaCombo;
     
     
     /**
@@ -140,7 +149,7 @@ public class WebVector
                 type = ImageRenderer.Type.PNG;
             
             worker = new TransformWorker(urlText.getText(), destText.getText(),
-                    type, getWindowSize(), chkCropWindow.isSelected(),
+                    type, mediaCombo.getSelectedItem().toString(), getWindowSize(), chkCropWindow.isSelected(),
                     chkLoadImages.isSelected(), chkLoadBackgroundImages.isSelected());
 
             worker.addPropertyChangeListener(new PropertyChangeListener()
@@ -194,7 +203,7 @@ public class WebVector
         if (mainFrame == null)
         {
             mainFrame = new JFrame();
-            mainFrame.setSize(new Dimension(509, 340));
+            mainFrame.setSize(new Dimension(600, 340));
             mainFrame.setTitle("WebVector");
             mainFrame.setContentPane(getMainPanel());
         }
@@ -619,6 +628,8 @@ public class WebVector
         {
             windowSizePanel = new JPanel();
             windowSizePanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+            windowSizePanel.add(getMediaLabel());
+            windowSizePanel.add(getMediaCombo());
             windowSizePanel.add(getWindowSizeLabel());
             windowSizePanel.add(getWwSpinner());
             windowSizePanel.add(getWxLabel());
@@ -632,7 +643,7 @@ public class WebVector
     {
         if (windowSizeLabel == null)
         {
-            windowSizeLabel = new JLabel("Window size");
+            windowSizeLabel = new JLabel("size");
         }
         return windowSizeLabel;
     }
@@ -677,6 +688,26 @@ public class WebVector
         return chkCropWindow;
     }
 
+    private JLabel getMediaLabel()
+    {
+        if (mediaLabel == null)
+        {
+            mediaLabel = new JLabel("Media");
+        }
+        return mediaLabel;
+    }
+
+    private JComboBox<String> getMediaCombo()
+    {
+        if (mediaCombo == null)
+        {
+            mediaCombo = new JComboBox<String>();
+            mediaCombo.setEditable(true);
+            mediaCombo.setModel(new DefaultComboBoxModel<String>(new String[] {"screen", "print" }));
+        }
+        return mediaCombo;
+    }
+    
     public static void main(String[] args)
     {
         if (args.length == 0)
@@ -689,9 +720,9 @@ public class WebVector
                 }
             });
         }
-        else if (args.length != 3)
+        else if (args.length != 3 && args.length != 4)
         {
-            System.err.println("Usage: java -jar WebVector.jar <url> <output_file> <format>");
+            System.err.println("Usage: java -jar WebVector.jar <url> <output_file> <output_format> [media]");
             System.err.println();
             System.err.println("Renders a document at the specified URL and stores the document image");
             System.err.println("to the specified file.");
@@ -700,9 +731,16 @@ public class WebVector
             System.err.println("png: a Portable Network Graphics file (bitmap image)");
             System.err.println("svg: a SVG file (vector image)");
             System.err.println();
+            System.err.println("Media:");
+            System.err.println("Media type ('screen', 'print', etc.), default is 'screen'");
+            System.err.println("Optionally followed by :resolution (width x height)");
+            System.err.println("Trailing ! after the height means cropping to the window size.");
+            System.err.println();
             System.err.println("Examples:");
             System.err.println("java -jar WebVector.jar http://www.nytimes.com/ nytimes.svg svg");
             System.err.println("java -jar WebVector.jar file://C:/myfile.html myfile.png png");
+            System.err.println("java -jar WebVector.jar http://en.wikipedia.org out.png png print:1000x400");
+            System.err.println("java -jar WebVector.jar http://en.wikipedia.org out.png png screen:800x400!");
             System.err.println();
             System.err.println("WebVector is based on the CSSBox rendering engine. See http://cssbox.sourceforge.net/");
             System.exit(0);
@@ -710,6 +748,7 @@ public class WebVector
         else
         {
             try {
+                //decode output type
                 ImageRenderer.Type type = null;
                 if (args[2].equalsIgnoreCase("png"))
                     type = ImageRenderer.Type.PNG;
@@ -718,12 +757,50 @@ public class WebVector
                 else
                 {
                     System.err.println("Error: unknown format");
-                    System.exit(0);
+                    System.exit(1);
                 }
+                
+                //decode media
+                String media = "screen";
+                Dimension windowSize = new Dimension(1200, 600);
+                boolean cropWindow = false;
+                if (args.length == 4)
+                {
+                    Pattern pattern = Pattern.compile("^([A-Za-z]+)(:([0-9]+)x([0-9]+)(\\!?))?");
+                    Matcher matcher = pattern.matcher(args[3]);
+                    boolean ok = matcher.find();
+                    if (ok)
+                    {
+                        media = matcher.group(1);
+                        
+                        int ww = windowSize.width;
+                        int wh = windowSize.height;
+                        try {
+                            if (matcher.group(3) != null)
+                                ww = Integer.valueOf(matcher.group(3));
+                            if (matcher.group(4) != null)
+                                wh = Integer.valueOf(matcher.group(4));
+                            windowSize = new Dimension(ww, wh);
+                        } catch (NumberFormatException e) {
+                            ok = false;
+                        }
+                        if ("!".equals(matcher.group(5)))
+                            cropWindow = true;
+                    }
+                    
+                    if (!ok)
+                    {
+                        System.err.println("Error: invalid media specification");
+                        System.exit(2);
+                    }
+                }
+                
                 
                 FileOutputStream os = new FileOutputStream(args[1]);
                 
                 ImageRenderer r = new ImageRenderer();
+                r.setMediaType(media);
+                r.setWindowSize(windowSize, cropWindow);
                 r.renderURL(args[0], os, type);
                 
                 os.close();
