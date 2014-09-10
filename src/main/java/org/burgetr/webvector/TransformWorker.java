@@ -19,6 +19,7 @@
  */
 package org.burgetr.webvector;
 
+import java.awt.Dimension;
 import java.io.FileOutputStream;
 
 import javax.swing.SwingWorker;
@@ -33,17 +34,21 @@ public class TransformWorker extends SwingWorker<Integer, String>
 {
     private String srcUrl;
     private String destFile;
-    private short type;
+    private ImageRenderer.Type type;
+    private Dimension windowSize;
+    private boolean cropWindow;
     private boolean loadImages;
     private boolean loadBgImages;
     
     
-    public TransformWorker(String srcUrl, String destFile, short type,
-            boolean loadImages, boolean loadBgImages)
+    public TransformWorker(String srcUrl, String destFile, ImageRenderer.Type type,
+            Dimension windowSize, boolean cropWindow, boolean loadImages, boolean loadBgImages)
     {
         this.srcUrl = srcUrl;
         this.destFile = destFile;
         this.type = type;
+        this.windowSize = new Dimension(windowSize);
+        this.cropWindow = cropWindow;
         this.loadImages = loadImages;
         this.loadBgImages = loadBgImages;
     }
@@ -54,6 +59,7 @@ public class TransformWorker extends SwingWorker<Integer, String>
         FileOutputStream os = new FileOutputStream(destFile);
         
         ImageRenderer r = new ImageRenderer();
+        r.setWindowSize(windowSize, cropWindow);
         r.setLoadImages(loadImages, loadBgImages);
         r.renderURL(srcUrl, os, type);
         

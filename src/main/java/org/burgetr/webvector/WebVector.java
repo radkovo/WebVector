@@ -40,6 +40,9 @@ import javax.swing.JCheckBox;
 import java.awt.GridLayout;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
+import java.awt.FlowLayout;
 
 /**
  * This is a wrapper class for calling the CSSBox ImageRenderer demo. 
@@ -69,6 +72,12 @@ public class WebVector
     private JPanel settingsPanel;
     private JCheckBox chkLoadImages;
     private JCheckBox chkLoadBackgroundImages;
+    private JPanel windowSizePanel;
+    private JLabel windowSizeLabel;
+    private JSpinner wwSpinner;
+    private JLabel wxLabel;
+    private JSpinner whSpinner;
+    private JCheckBox chkCropWindow;
     
     
     /**
@@ -118,15 +127,21 @@ public class WebVector
         startButton.setEnabled(valid);
     }
     
+    private Dimension getWindowSize()
+    {
+        return new Dimension((Integer) wwSpinner.getValue(), (Integer) whSpinner.getValue());
+    }
+    
     private void execTransformation()
     {
         try {
-            short type = ImageRenderer.TYPE_SVG;
+            ImageRenderer.Type type = ImageRenderer.Type.SVG;
             if (pngRadio.isSelected())
-                type = ImageRenderer.TYPE_PNG;
+                type = ImageRenderer.Type.PNG;
             
             worker = new TransformWorker(urlText.getText(), destText.getText(),
-                    type, chkLoadImages.isSelected(), chkLoadBackgroundImages.isSelected());
+                    type, getWindowSize(), chkCropWindow.isSelected(),
+                    chkLoadImages.isSelected(), chkLoadBackgroundImages.isSelected());
 
             worker.addPropertyChangeListener(new PropertyChangeListener()
             {
@@ -145,6 +160,7 @@ public class WebVector
                                       
                                 } catch (final Exception e) {
                                     JOptionPane.showMessageDialog(mainFrame, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                                    e.printStackTrace();
                                 }
                                 startButton.setEnabled(true);
                                 statusText.setText("Done");
@@ -178,7 +194,7 @@ public class WebVector
         if (mainFrame == null)
         {
             mainFrame = new JFrame();
-            mainFrame.setSize(new Dimension(509, 310));
+            mainFrame.setSize(new Dimension(509, 340));
             mainFrame.setTitle("WebVector");
             mainFrame.setContentPane(getMainPanel());
         }
@@ -199,7 +215,7 @@ public class WebVector
             gridBagConstraints11.gridx = 0;
             gridBagConstraints11.fill = GridBagConstraints.HORIZONTAL;
             gridBagConstraints11.gridwidth = 2;
-            gridBagConstraints11.gridy = 10;
+            gridBagConstraints11.gridy = 11;
             GridBagConstraints gridBagConstraints8 = new GridBagConstraints();
             gridBagConstraints8.gridx = 0;
             gridBagConstraints8.anchor = GridBagConstraints.WEST;
@@ -223,7 +239,7 @@ public class WebVector
             gridBagConstraints5.gridy = 1;
             GridBagConstraints gridBagConstraints3 = new GridBagConstraints();
             gridBagConstraints3.fill = GridBagConstraints.BOTH;
-            gridBagConstraints3.gridy = 8;
+            gridBagConstraints3.gridy = 9;
             gridBagConstraints3.weightx = 1.0;
             gridBagConstraints3.insets = new Insets(10, 0, 10, 0);
             gridBagConstraints3.gridwidth = 2;
@@ -256,7 +272,7 @@ public class WebVector
             gridBagConstraints.gridx = 0;
             mainPanel = new JPanel();
             GridBagLayout gbl_mainPanel = new GridBagLayout();
-            gbl_mainPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0};
+            gbl_mainPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0};
             gbl_mainPanel.columnWeights = new double[]{1.0, 0.0};
             mainPanel.setLayout(gbl_mainPanel);
             mainPanel.add(urlLabel, gridBagConstraints0);
@@ -264,11 +280,18 @@ public class WebVector
             mainPanel.add(destLabel, gridBagConstraints1);
             mainPanel.add(getDestText(), gridBagConstraints2);
             GridBagConstraints gbc_settingsPanel = new GridBagConstraints();
-            gbc_settingsPanel.gridheight = 2;
+            gbc_settingsPanel.insets = new Insets(0, 0, 5, 0);
             gbc_settingsPanel.gridwidth = 2;
             gbc_settingsPanel.gridx = 0;
             gbc_settingsPanel.gridy = 6;
             mainPanel.add(getSettingsPanel(), gbc_settingsPanel);
+            GridBagConstraints gbc_windowSizePanel = new GridBagConstraints();
+            gbc_windowSizePanel.gridwidth = 2;
+            gbc_windowSizePanel.insets = new Insets(0, 0, 5, 5);
+            gbc_windowSizePanel.fill = GridBagConstraints.BOTH;
+            gbc_windowSizePanel.gridx = 0;
+            gbc_windowSizePanel.gridy = 7;
+            mainPanel.add(getWindowSizePanel(), gbc_windowSizePanel);
             mainPanel.add(getStatusText(), gridBagConstraints3);
             mainPanel.add(getBrowseUrlButton(), gridBagConstraints5);
             mainPanel.add(getBrowseDestButton(), gridBagConstraints6);
@@ -584,11 +607,74 @@ public class WebVector
     {
         if (chkLoadBackgroundImages == null)
         {
-            chkLoadBackgroundImages = new JCheckBox(
-                    "Include background images");
+            chkLoadBackgroundImages = new JCheckBox("Include background images");
             chkLoadBackgroundImages.setSelected(true);
         }
         return chkLoadBackgroundImages;
+    }
+
+    private JPanel getWindowSizePanel()
+    {
+        if (windowSizePanel == null)
+        {
+            windowSizePanel = new JPanel();
+            windowSizePanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+            windowSizePanel.add(getWindowSizeLabel());
+            windowSizePanel.add(getWwSpinner());
+            windowSizePanel.add(getWxLabel());
+            windowSizePanel.add(getWhSpinner());
+            windowSizePanel.add(getCropCheckbox());
+        }
+        return windowSizePanel;
+    }
+
+    private JLabel getWindowSizeLabel()
+    {
+        if (windowSizeLabel == null)
+        {
+            windowSizeLabel = new JLabel("Window size");
+        }
+        return windowSizeLabel;
+    }
+
+    private JSpinner getWwSpinner()
+    {
+        if (wwSpinner == null)
+        {
+            wwSpinner = new JSpinner();
+            wwSpinner.setModel(new SpinnerNumberModel(new Integer(1200),
+                    new Integer(100), null, new Integer(10)));
+        }
+        return wwSpinner;
+    }
+
+    private JLabel getWxLabel()
+    {
+        if (wxLabel == null)
+        {
+            wxLabel = new JLabel("x");
+        }
+        return wxLabel;
+    }
+
+    private JSpinner getWhSpinner()
+    {
+        if (whSpinner == null)
+        {
+            whSpinner = new JSpinner();
+            whSpinner.setModel(new SpinnerNumberModel(new Integer(600),
+                    new Integer(100), null, new Integer(10)));
+        }
+        return whSpinner;
+    }
+
+    private JCheckBox getCropCheckbox()
+    {
+        if (chkCropWindow == null)
+        {
+            chkCropWindow = new JCheckBox("Crop to window size");
+        }
+        return chkCropWindow;
     }
 
     public static void main(String[] args)
@@ -624,11 +710,11 @@ public class WebVector
         else
         {
             try {
-                short type = -1;
+                ImageRenderer.Type type = null;
                 if (args[2].equalsIgnoreCase("png"))
-                    type = ImageRenderer.TYPE_PNG;
+                    type = ImageRenderer.Type.PNG;
                 else if (args[2].equalsIgnoreCase("svg"))
-                    type = ImageRenderer.TYPE_SVG;
+                    type = ImageRenderer.Type.SVG;
                 else
                 {
                     System.err.println("Error: unknown format");
