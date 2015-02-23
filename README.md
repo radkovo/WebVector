@@ -1,7 +1,7 @@
 WebVector
 =========
 An HTML to SVG or PNG convertor
-(c) 2009-2014 Radek Burget (burgetr@fit.vutbr.cz)
+(c) 2009-2015 Radek Burget (burgetr@fit.vutbr.cz)
 
 See the project page for more information and downloads:
 [http://cssbox.sourceforge.net/webvector](http://cssbox.sourceforge.net/webvector)
