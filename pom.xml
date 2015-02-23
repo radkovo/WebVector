@@ -8,7 +8,7 @@
 
 	<groupId>net.sf.cssbox</groupId>
 	<artifactId>webvector</artifactId>
-	<version>3.4</version>
+	<version>3.5-SNAPSHOT</version>
 	<name>WebVector</name>
 	<description>WebVector is an HTML to SVG or PNG convertor. It converts a HTML document into a vector image in SVG format or a bitmap image in PNG format. The Standard Vector Graphics (SVG) files can be further edited by a variety of vector graphics editors.</description>
 	<url>http://cssbox.sourceforge.net/webvector</url>
