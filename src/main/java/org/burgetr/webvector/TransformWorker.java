@@ -24,7 +24,7 @@ import java.io.FileOutputStream;
 
 import javax.swing.SwingWorker;
 
-import org.fit.cssbox.demo.ImageRenderer;
+import org.fit.cssbox.demo.PdfImageRenderer;
 
 /**
  *
@@ -34,17 +34,19 @@ public class TransformWorker extends SwingWorker<Integer, String>
 {
     private String srcUrl;
     private String destFile;
-    private ImageRenderer.Type type;
-    private ImageRenderer renderer;
+    private String pageFormat;
+    private PdfImageRenderer.Type type;
+    private PdfImageRenderer renderer;
     
-    public TransformWorker(String srcUrl, String destFile, ImageRenderer.Type type, String media,
-            Dimension windowSize, boolean cropWindow, boolean loadImages, boolean loadBgImages)
+    public TransformWorker(String srcUrl, String destFile, PdfImageRenderer.Type type, String media,
+            Dimension windowSize, boolean cropWindow, boolean loadImages, boolean loadBgImages, String pageFormat)
     {
         this.srcUrl = srcUrl;
         this.destFile = destFile;
         this.type = type;
+        this.pageFormat = new String(pageFormat);
         
-        renderer = new ImageRenderer();
+        renderer = new PdfImageRenderer();
         renderer.setMediaType(media);
         renderer.setWindowSize(windowSize, cropWindow);
         renderer.setLoadImages(loadImages, loadBgImages);
@@ -54,7 +56,7 @@ public class TransformWorker extends SwingWorker<Integer, String>
     protected Integer doInBackground() throws Exception
     {
         FileOutputStream os = new FileOutputStream(destFile);
-        renderer.renderURL(srcUrl, os, type);
+        renderer.renderURL(srcUrl, os, type, pageFormat);
         os.close();
         return 0;
     }

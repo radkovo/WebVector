@@ -12,7 +12,7 @@ import java.util.concurrent.CancellationException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.fit.cssbox.demo.ImageRenderer;
+import org.fit.cssbox.demo.PdfImageRenderer;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JFileChooser;
@@ -87,6 +87,7 @@ public class WebVector
     private JCheckBox chkCropWindow;
     private JLabel mediaLabel;
     private JComboBox<String> mediaCombo;
+    private JRadioButton pdfRadio;
     
     
     /**
@@ -144,13 +145,15 @@ public class WebVector
     private void execTransformation()
     {
         try {
-            ImageRenderer.Type type = ImageRenderer.Type.SVG;
+            PdfImageRenderer.Type type = PdfImageRenderer.Type.SVG;
             if (pngRadio.isSelected())
-                type = ImageRenderer.Type.PNG;
+                type = PdfImageRenderer.Type.PNG;
+            else if (pdfRadio.isSelected())
+                type = PdfImageRenderer.Type.PDF;
             
             worker = new TransformWorker(urlText.getText(), destText.getText(),
                     type, mediaCombo.getSelectedItem().toString(), getWindowSize(), chkCropWindow.isSelected(),
-                    chkLoadImages.isSelected(), chkLoadBackgroundImages.isSelected());
+                    chkLoadImages.isSelected(), chkLoadBackgroundImages.isSelected(), "A4");
 
             worker.addPropertyChangeListener(new PropertyChangeListener()
             {
@@ -480,19 +483,49 @@ public class WebVector
         {
             GridBagConstraints gridBagConstraints9 = new GridBagConstraints();
             gridBagConstraints9.gridx = 1;
-            gridBagConstraints9.insets = new Insets(0, 10, 0, 0);
+            gridBagConstraints9.insets = new Insets(0, 10, 0, 5);
             gridBagConstraints9.gridy = 0;
             typePanel = new JPanel();
             typePanel.setLayout(new GridBagLayout());
             ButtonGroup bgroup = new ButtonGroup();
             bgroup.add(getSvgRadio());
             bgroup.add(getPngRadio());
-            typePanel.add(getSvgRadio(), new GridBagConstraints());
+            bgroup.add(getPdfRadio());
+            GridBagConstraints gbc_svgRadio = new GridBagConstraints();
+            gbc_svgRadio.insets = new Insets(0, 0, 0, 5);
+            gbc_svgRadio.gridx = 0;
+            gbc_svgRadio.gridy = 0;
+            typePanel.add(getSvgRadio(), gbc_svgRadio);
             typePanel.add(getPngRadio(), gridBagConstraints9);
+            GridBagConstraints gbc_pdfRadio = new GridBagConstraints();
+            gbc_pdfRadio.gridx = 2;
+            gbc_pdfRadio.gridy = 0;
+            typePanel.add(getPdfRadio(), gbc_pdfRadio);
         }
         return typePanel;
     }
 
+    private void updateFileExtension()
+    {
+        String text = destText.getText();
+        if (text.endsWith(".svg") || text.endsWith(".png") || text.endsWith(".pdf"))
+        {
+            if (svgRadio.isSelected())
+            {
+                text = text.substring(0, text.length()-4) + ".svg";
+            }
+            else if (pngRadio.isSelected())
+            {
+                text = text.substring(0, text.length()-4) + ".png";
+            }
+            else if (pdfRadio.isSelected())
+            {
+                text = text.substring(0, text.length()-4) + ".pdf";
+            }
+            destText.setText(text);
+        }
+    }
+    
     /**
      * This method initializes svgRadio	
      * 	
@@ -509,17 +542,7 @@ public class WebVector
             {
                 public void itemStateChanged(java.awt.event.ItemEvent e)
                 {
-                    String text = destText.getText();
-                    if (svgRadio.isSelected() && text.endsWith(".png"))
-                    {
-                        text = text.substring(0, text.length()-4) + ".svg";
-                        destText.setText(text);
-                    }
-                    if (!svgRadio.isSelected() && text.endsWith(".svg"))
-                    {
-                        text = text.substring(0, text.length()-4) + ".png";
-                        destText.setText(text);
-                    }
+                    updateFileExtension();
                 }
             });
         }
@@ -537,10 +560,31 @@ public class WebVector
         {
             pngRadio = new JRadioButton();
             pngRadio.setText("PNG Bitmap Graphics");
+            pngRadio.addItemListener(new java.awt.event.ItemListener()
+            {
+                public void itemStateChanged(java.awt.event.ItemEvent e)
+                {
+                    updateFileExtension();
+                }
+            });
         }
         return pngRadio;
     }
 
+    private JRadioButton getPdfRadio() {
+        if (pdfRadio == null) {
+            pdfRadio = new JRadioButton("PDF Document");
+            pdfRadio.addItemListener(new java.awt.event.ItemListener()
+            {
+                public void itemStateChanged(java.awt.event.ItemEvent e)
+                {
+                    updateFileExtension();
+                }
+            });
+        }
+        return pdfRadio;
+    }
+    
     /**
      * This method initializes buttonPanel	
      * 	
@@ -730,6 +774,7 @@ public class WebVector
             System.err.println("Supported formats:");
             System.err.println("png: a Portable Network Graphics file (bitmap image)");
             System.err.println("svg: a SVG file (vector image)");
+            System.err.println("pdf: a PDF document (vector paged document)");
             System.err.println();
             System.err.println("Media:");
             System.err.println("Media type ('screen', 'print', etc.), default is 'screen'");
@@ -749,11 +794,13 @@ public class WebVector
         {
             try {
                 //decode output type
-                ImageRenderer.Type type = null;
+                PdfImageRenderer.Type type = null;
                 if (args[2].equalsIgnoreCase("png"))
-                    type = ImageRenderer.Type.PNG;
+                    type = PdfImageRenderer.Type.PNG;
                 else if (args[2].equalsIgnoreCase("svg"))
-                    type = ImageRenderer.Type.SVG;
+                    type = PdfImageRenderer.Type.SVG;
+                else if (args[2].equalsIgnoreCase("pdf"))
+                    type = PdfImageRenderer.Type.PDF;
                 else
                 {
                     System.err.println("Error: unknown format");
@@ -798,10 +845,10 @@ public class WebVector
                 
                 FileOutputStream os = new FileOutputStream(args[1]);
                 
-                ImageRenderer r = new ImageRenderer();
+                PdfImageRenderer r = new PdfImageRenderer();
                 r.setMediaType(media);
                 r.setWindowSize(windowSize, cropWindow);
-                r.renderURL(args[0], os, type);
+                r.renderURL(args[0], os, type, "A4");
                 
                 os.close();
                 System.err.println("Done.");
