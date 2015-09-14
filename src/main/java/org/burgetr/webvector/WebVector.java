@@ -50,6 +50,8 @@ import java.awt.FlowLayout;
 
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 /**
  * This is a wrapper class for calling the CSSBox ImageRenderer demo. 
@@ -88,6 +90,7 @@ public class WebVector
     private JLabel mediaLabel;
     private JComboBox<String> mediaCombo;
     private JRadioButton pdfRadio;
+    private JComboBox<String> formatCombo;
     
     
     /**
@@ -153,7 +156,7 @@ public class WebVector
             
             worker = new TransformWorker(urlText.getText(), destText.getText(),
                     type, mediaCombo.getSelectedItem().toString(), getWindowSize(), chkCropWindow.isSelected(),
-                    chkLoadImages.isSelected(), chkLoadBackgroundImages.isSelected(), "A4");
+                    chkLoadImages.isSelected(), chkLoadBackgroundImages.isSelected(), (String) formatCombo.getSelectedItem());
 
             worker.addPropertyChangeListener(new PropertyChangeListener()
             {
@@ -206,7 +209,7 @@ public class WebVector
         if (mainFrame == null)
         {
             mainFrame = new JFrame();
-            mainFrame.setSize(new Dimension(600, 340));
+            mainFrame.setSize(new Dimension(600, 358));
             mainFrame.setTitle("WebVector");
             mainFrame.setContentPane(getMainPanel());
         }
@@ -498,9 +501,14 @@ public class WebVector
             typePanel.add(getSvgRadio(), gbc_svgRadio);
             typePanel.add(getPngRadio(), gridBagConstraints9);
             GridBagConstraints gbc_pdfRadio = new GridBagConstraints();
+            gbc_pdfRadio.insets = new Insets(0, 0, 0, 5);
             gbc_pdfRadio.gridx = 2;
             gbc_pdfRadio.gridy = 0;
             typePanel.add(getPdfRadio(), gbc_pdfRadio);
+            GridBagConstraints gbc_formatCombo = new GridBagConstraints();
+            gbc_formatCombo.gridx = 3;
+            gbc_formatCombo.gridy = 0;
+            typePanel.add(getFormatCombo(), gbc_formatCombo);
         }
         return typePanel;
     }
@@ -579,6 +587,15 @@ public class WebVector
                 public void itemStateChanged(java.awt.event.ItemEvent e)
                 {
                     updateFileExtension();
+                    //change the visibility of page format options
+                    if (pdfRadio.isSelected())
+                    {
+                        formatCombo.setEnabled(true);
+                    }
+                    else
+                    {
+                        formatCombo.setEnabled(false);
+                    }
                 }
             });
         }
@@ -752,6 +769,44 @@ public class WebVector
         return mediaCombo;
     }
     
+    private JComboBox<String> getFormatCombo() {
+        if (formatCombo == null) {
+            formatCombo = new JComboBox<String>();
+            formatCombo.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    int[] size = getSizeFromPageFormat(((String) formatCombo.getSelectedItem()).toUpperCase());
+                    wwSpinner.setValue(size[0]);
+                    whSpinner.setValue(size[1]);
+                }
+            });
+            formatCombo.setEnabled(false);
+            formatCombo.setModel(new DefaultComboBoxModel<String>(new String[] {"A4", "LETTER", "A0", "A1", "A2", "A3", "A5", "A6"}));
+        }
+        return formatCombo;
+    }
+    
+    private int[] getSizeFromPageFormat(String format)
+    {
+        if ("A0".equals(format))
+            return new int[] {2348, 3370};
+        else if ("A1".equals(format))
+            return new int[] {1648, 2348};
+        else if ("A2".equals(format))
+            return new int[] {1191, 1648};
+        else if ("A3".equals(format))
+            return new int[] {842, 1191};
+        else if ("A4".equals(format))
+            return new int[] {595, 842};
+        else if ("A5".equals(format))
+            return new int[] {420, 595};
+        else if ("A6".equals(format))
+            return new int[] {298, 420};
+        else if ("LETTER".equals(format))
+            return new int[] {612, 792};
+        else
+            return new int[] {1200, 600};
+    }
+    
     public static void main(String[] args)
     {
         if (args.length == 0)
@@ -774,7 +829,8 @@ public class WebVector
             System.err.println("Supported formats:");
             System.err.println("png: a Portable Network Graphics file (bitmap image)");
             System.err.println("svg: a SVG file (vector image)");
-            System.err.println("pdf: a PDF document (vector paged document)");
+            System.err.println("pdf: a PDF document (vector paged document), optionally followed by :page_size");
+            System.err.println("     (supported page sizes are A0, A1, A2, A3, A4, A5, A6 or LETTER)");
             System.err.println();
             System.err.println("Media:");
             System.err.println("Media type ('screen', 'print', etc.), default is 'screen'");
@@ -793,14 +849,20 @@ public class WebVector
         else
         {
             try {
+                String pageFormat = "A4";
+                
                 //decode output type
                 PdfImageRenderer.Type type = null;
                 if (args[2].equalsIgnoreCase("png"))
                     type = PdfImageRenderer.Type.PNG;
                 else if (args[2].equalsIgnoreCase("svg"))
                     type = PdfImageRenderer.Type.SVG;
-                else if (args[2].equalsIgnoreCase("pdf"))
+                else if (args[2].equalsIgnoreCase("pdf") || args[2].toLowerCase().startsWith("pdf:"))
+                {
                     type = PdfImageRenderer.Type.PDF;
+                    if (args[2].length() > 3)
+                        pageFormat = args[2].substring(4).toUpperCase();
+                }
                 else
                 {
                     System.err.println("Error: unknown format");
@@ -848,7 +910,7 @@ public class WebVector
                 PdfImageRenderer r = new PdfImageRenderer();
                 r.setMediaType(media);
                 r.setWindowSize(windowSize, cropWindow);
-                r.renderURL(args[0], os, type, "A4");
+                r.renderURL(args[0], os, type, pageFormat);
                 
                 os.close();
                 System.err.println("Done.");
