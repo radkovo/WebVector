@@ -1,6 +1,6 @@
 /*
  * TransformWorker.java
- * Copyright (c) 2009-2014 Radek Burget
+ * Copyright (c) 2009-2019 Radek Burget
  *
  * WebVector is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -24,8 +24,6 @@ import java.io.FileOutputStream;
 
 import javax.swing.SwingWorker;
 
-import org.fit.cssbox.demo.PdfImageRenderer;
-
 /**
  *
  * @author burgetr
@@ -35,10 +33,10 @@ public class TransformWorker extends SwingWorker<Integer, String>
     private String srcUrl;
     private String destFile;
     private String pageFormat;
-    private PdfImageRenderer.Type type;
-    private PdfImageRenderer renderer;
+    private ImageRenderer.Type type;
+    private ImageRenderer renderer;
     
-    public TransformWorker(String srcUrl, String destFile, PdfImageRenderer.Type type, String media,
+    public TransformWorker(String srcUrl, String destFile, ImageRenderer.Type type, String media,
             Dimension windowSize, boolean cropWindow, boolean loadImages, boolean loadBgImages, String pageFormat)
     {
         this.srcUrl = srcUrl;
@@ -46,7 +44,7 @@ public class TransformWorker extends SwingWorker<Integer, String>
         this.type = type;
         this.pageFormat = new String(pageFormat);
         
-        renderer = new PdfImageRenderer();
+        renderer = new ImageRenderer();
         renderer.setMediaType(media);
         renderer.setWindowSize(windowSize, cropWindow);
         renderer.setLoadImages(loadImages, loadBgImages);

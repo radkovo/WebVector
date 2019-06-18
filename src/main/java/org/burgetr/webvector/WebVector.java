@@ -12,8 +12,6 @@ import java.util.concurrent.CancellationException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.fit.cssbox.demo.PdfImageRenderer;
-
 import javax.swing.ButtonGroup;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -148,11 +146,11 @@ public class WebVector
     private void execTransformation()
     {
         try {
-            PdfImageRenderer.Type type = PdfImageRenderer.Type.SVG;
+            ImageRenderer.Type type = ImageRenderer.Type.SVG;
             if (pngRadio.isSelected())
-                type = PdfImageRenderer.Type.PNG;
+                type = ImageRenderer.Type.PNG;
             else if (pdfRadio.isSelected())
-                type = PdfImageRenderer.Type.PDF;
+                type = ImageRenderer.Type.PDF;
             
             worker = new TransformWorker(urlText.getText(), destText.getText(),
                     type, mediaCombo.getSelectedItem().toString(), getWindowSize(), chkCropWindow.isSelected(),
@@ -829,8 +827,7 @@ public class WebVector
             System.err.println("Supported formats:");
             System.err.println("png: a Portable Network Graphics file (bitmap image)");
             System.err.println("svg: a SVG file (vector image)");
-            System.err.println("pdf: a PDF document (vector paged document), optionally followed by :page_size");
-            System.err.println("     (supported page sizes are A0, A1, A2, A3, A4, A5, A6 or LETTER)");
+            System.err.println("pdf: a PDF document (vector paged document)");
             System.err.println();
             System.err.println("Media:");
             System.err.println("Media type ('screen', 'print', etc.), default is 'screen'");
@@ -852,14 +849,14 @@ public class WebVector
                 String pageFormat = "A4";
                 
                 //decode output type
-                PdfImageRenderer.Type type = null;
+                ImageRenderer.Type type = null;
                 if (args[2].equalsIgnoreCase("png"))
-                    type = PdfImageRenderer.Type.PNG;
+                    type = ImageRenderer.Type.PNG;
                 else if (args[2].equalsIgnoreCase("svg"))
-                    type = PdfImageRenderer.Type.SVG;
+                    type = ImageRenderer.Type.SVG;
                 else if (args[2].equalsIgnoreCase("pdf") || args[2].toLowerCase().startsWith("pdf:"))
                 {
-                    type = PdfImageRenderer.Type.PDF;
+                    type = ImageRenderer.Type.PDF;
                     if (args[2].length() > 3)
                         pageFormat = args[2].substring(4).toUpperCase();
                 }
@@ -907,7 +904,7 @@ public class WebVector
                 
                 FileOutputStream os = new FileOutputStream(args[1]);
                 
-                PdfImageRenderer r = new PdfImageRenderer();
+                ImageRenderer r = new ImageRenderer();
                 r.setMediaType(media);
                 r.setWindowSize(windowSize, cropWindow);
                 r.renderURL(args[0], os, type, pageFormat);

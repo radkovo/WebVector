@@ -1,7 +1,9 @@
 <configuration>
 
 	<appender name="cssbox" class="ch.qos.logback.core.ConsoleAppender">
-		<encoder>
+		<!-- <encoder> <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} 
+			- %msg%n</pattern> </encoder> -->
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
 			<pattern>%-4relative %-5level %-25logger{1} - %msg%n</pattern>
 		</encoder>
 	</appender>
@@ -11,18 +13,35 @@
 		<appender-ref ref="cssbox" />
 	</logger>
 
-	<appender name="jstyleparser" class="ch.qos.logback.core.ConsoleAppender">
-		<encoder>
+	<appender name="jstyleparser"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<File>/tmp/jstyleparser.log</File>
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<FileNamePattern>/tmp/jstyleparser.%i.log.zip</FileNamePattern>
+			<MinIndex>1</MinIndex>
+			<MaxIndex>3</MaxIndex>
+		</rollingPolicy>
+		<triggeringPolicy
+			class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<MaxFileSize>1024kB</MaxFileSize>
+		</triggeringPolicy>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<pattern>%-4relative %-5level %logger{35} - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<appender name="jstyleparser_console" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
 			<pattern>%-4relative %-5level %logger{35} - %msg%n</pattern>
 		</encoder>
 	</appender>
 	
 	<logger name="test" additivity="false">
-		<level value="warn" />
+		<level value="error" />
 		<appender-ref ref="jstyleparser" />
 	</logger>
 
-	<logger name="cz.vutbr.web" additivity="false">
+	<logger name="cz.vutbr.web.css" additivity="false">
 		<level value="error" />
 		<appender-ref ref="jstyleparser" />
 	</logger>
@@ -33,6 +52,11 @@
 	</logger>
 
 	<logger name="cz.vutbr.web.csskit.antlr" additivity="false">
+		<level value="error" />
+		<appender-ref ref="jstyleparser" />
+	</logger>
+
+	<logger name="cz.vutbr.web.csskit.antlr4" additivity="false">
 		<level value="error" />
 		<appender-ref ref="jstyleparser" />
 	</logger>
@@ -49,6 +73,7 @@
 
 
 	<root>
+		<level value="error" />
 		<appender-ref ref="cssbox" />
 	</root>
 
