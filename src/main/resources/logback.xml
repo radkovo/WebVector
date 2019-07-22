@@ -13,7 +13,7 @@
 		<appender-ref ref="cssbox" />
 	</logger>
 
-	<appender name="jstyleparser"
+	<appender name="jstyleparser_file"
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<File>/tmp/jstyleparser.log</File>
 		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
@@ -34,6 +34,9 @@
 		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
 			<pattern>%-4relative %-5level %logger{35} - %msg%n</pattern>
 		</encoder>
+	</appender>
+	
+	<appender name="jstyleparser" class="ch.qos.logback.core.helpers.NOPAppender">
 	</appender>
 	
 	<logger name="test" additivity="false">
