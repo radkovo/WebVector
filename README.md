@@ -1,7 +1,7 @@
 WebVector
 =========
 
-An HTML to SVG or PNG convertor\
+An HTML to SVG, PDF or PNG convertor\
 (c) 2009-2019 Radek Burget (burgetr@fit.vutbr.cz)
 
 See the project page for more information and downloads:
