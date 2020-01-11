@@ -37,7 +37,7 @@ import org.fit.cssbox.io.DocumentSource;
 import org.fit.cssbox.layout.BrowserCanvas;
 import org.fit.cssbox.layout.BrowserConfig;
 import org.fit.cssbox.layout.Viewport;
-import org.fit.cssbox.render.PDFRenderer;
+import org.fit.cssbox.pdf.PDFRenderer;
 import org.fit.cssbox.svg.render.SVGDOMRenderer;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
